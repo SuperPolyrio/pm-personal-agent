@@ -15,14 +15,16 @@ cp -n .env.example .env
 
 1. **接自己的模型。** 编辑 `.env`，把 `PM_MODEL_URL` 填为支持工具调用的 OpenAI 兼容 Chat Completions API 根地址（通常以 `/v1` 结尾），`PM_MODEL` 填服务返回的模型 ID，`PM_MODEL_API_KEY` 填自己的密钥。模板指向运行 Bot 的机器上的 `http://127.0.0.1:18800/v1`，模型为 `Qwen3.8-27B`。模板的 `PM_MODEL_CONTEXT=131072`，换模型时按服务实际支持的上下文调整。
 2. **配置 Telegram。** 向 Telegram 的 `@BotFather` 发送 `/newbot`，将拿到的 Token 填入 `.env` 的 `telegram-token`。将自己的数字用户 ID 填入 `TELEGRAM_USER_ID`。如果不知道自己的 ID，在启动程序之前先私聊新 Bot 发送 `/start`，再从 Bot API 的 `getUpdates` 返回中读取 `message.from.id`。[创建 Bot](https://core.telegram.org/bots/tutorial#obtain-your-bot-token) · [getUpdates](https://core.telegram.org/bots/api#getupdates)
-3. **构建并启动。** 运行以下命令，然后在 Telegram 私聊自己的 Bot 发送 `/status` 或直接提问。
+3. **构建并启动。** 运行以下命令。私聊 Bot 发送 `/status`，确认能收到状态回复，再发“2 + 3 等于几？”验证模型回答。
 
    ```bash
    npm run build
    npm run telegram
    ```
 
-**使用全新状态目录首次启动时，没有默认盯盘市场，也没有自动推送。** 默认状态目录是 `var/`。 在私聊中明确提出持续监控要求后才会创建任务。启动会恢复现有状态目录里的活跃任务，给他人部署时使用新的 `PM_STATE_DIR`。
+如果部署机器无法直连 Telegram，在 `.env` 的 `PM_HTTPS_PROXY` 填入自己已有的 HTTP 代理地址，例如 `http://127.0.0.1:7890`。同机模型的回环地址可沿用模板的 `PM_NO_PROXY`。
+
+只接模型和 Telegram 就可以启动并进行普通对话。**使用全新状态目录首次启动时，没有默认盯盘市场，也没有自动推送。** 默认状态目录是 `var/`。在私聊中明确提出持续监控要求后才会创建任务。启动会恢复现有状态目录里的活跃任务，给他人部署时使用新的 `PM_STATE_DIR`。
 
 ## 运行与数据配置
 
