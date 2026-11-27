@@ -2,21 +2,33 @@
 
 个人 Polymarket 研究助手。DSH 负责模型与工具循环、会话历史、Skill、MCP、上下文压缩和定时调度；本项目提供数据连接、个人业务记录和 Telegram 入口。
 
-默认使用本机 `Qwen3.8-27B`，接口由 `PM_MODEL_URL` 配置，上下文 32768 tokens。配置见 `.env.example`。
+## 从零启动 Telegram Bot
 
-## 运行
+需要 Node.js 24.9 或更高版本。先克隆仓库并创建本机配置。
 
 ```bash
+git clone https://github.com/SuperPolyrio/pm-personal-agent.git
+cd pm-personal-agent
 npm ci
 cp -n .env.example .env
-npm run check
-npm run build
-npm run research -- '你的问题'
-npm start -- chat
-npm run telegram
 ```
 
-固定数据源入口、代理和本机连接选项集中在 `.env`。新闻发布源目录位于 `config/news-publishers.json`，可通过 `PM_NEWS_PUBLISHERS_FILE` 指定其他目录文件。`.env.example` 提供公开默认值与变量名。生产凭据和用户 ID 填入本机 `.env`。market-data 和 Paper 使用各自管理的本机凭据文件，由 `MARKET_DATA_QUERY_CONFIG` 和 `PM_PAPER_CREDENTIALS_FILE` 指定位置。Telegram 使用 `telegram-token` 和 `TELEGRAM_USER_ID`。用户服务配置在 `deploy/pm-personal-agent.service`；更新后构建并重启 `systemctl --user restart pm-personal-agent`。`/new` 新建会话，`/cancel` 停止当前研究，`/status` 查看状态，`/retry` 重发未确认送达的消息。
+1. **接自己的模型。** 编辑 `.env`，把 `PM_MODEL_URL` 填为支持工具调用的 OpenAI 兼容 Chat Completions API 根地址（通常以 `/v1` 结尾），`PM_MODEL` 填服务返回的模型 ID，`PM_MODEL_API_KEY` 填自己的密钥。模板指向运行 Bot 的机器上的 `http://127.0.0.1:18800/v1`，模型为 `Qwen3.8-27B`。模板的 `PM_MODEL_CONTEXT=131072`，换模型时按服务实际支持的上下文调整。
+2. **配置 Telegram。** 向 Telegram 的 `@BotFather` 发送 `/newbot`，将拿到的 Token 填入 `.env` 的 `telegram-token`。将自己的数字用户 ID 填入 `TELEGRAM_USER_ID`。如果不知道自己的 ID，在启动程序之前先私聊新 Bot 发送 `/start`，再从 Bot API 的 `getUpdates` 返回中读取 `message.from.id`。[创建 Bot](https://core.telegram.org/bots/tutorial#obtain-your-bot-token) · [getUpdates](https://core.telegram.org/bots/api#getupdates)
+3. **构建并启动。** 运行以下命令，然后在 Telegram 私聊自己的 Bot 发送 `/status` 或直接提问。
+
+   ```bash
+   npm run build
+   npm run telegram
+   ```
+
+**使用全新状态目录首次启动时，没有默认盯盘市场，也没有自动推送。** 默认状态目录是 `var/`。 在私聊中明确提出持续监控要求后才会创建任务。启动会恢复现有状态目录里的活跃任务，给他人部署时使用新的 `PM_STATE_DIR`。
+
+## 运行与数据配置
+
+命令行可用 `npm start -- chat` 进入交互，或用 `npm run research -- '你的问题'` 提交一次研究。开发检查可运行 `npm run check`。Telegram 支持 `/new` 新建会话、`/cancel` 停止当前研究、`/status` 查看状态和 `/retry` 重发未确认送达的消息。用户服务配置见 `deploy/pm-personal-agent.service`，安装服务后的更新可重新构建并运行 `systemctl --user restart pm-personal-agent`。
+
+固定数据源入口、代理和本机连接选项集中在 `.env`，公开默认值见 `.env.example`。新闻发布源目录位于 `config/news-publishers.json`，可通过 `PM_NEWS_PUBLISHERS_FILE` 指定其他目录文件。使用市场 SQL 或 Polymonitor 功能时需接入自己的对应数据服务。market-data 和 Paper 各自使用本机凭据文件，由 `MARKET_DATA_QUERY_CONFIG` 和 `PM_PAPER_CREDENTIALS_FILE` 指定位置。
 
 同一状态目录只运行一个宿主。独立本地研究可设置不同的 `PM_STATE_DIR`；运行中的服务可用以下命令直接检查工具，无需调用模型：
 
@@ -94,7 +106,7 @@ Agent 通用查询固定保存至多 10000 行，8 MiB，PostgreSQL 执行上限
 
 使用 SDK 的 `session.run()` 驱动完整调用循环。普通查询没有独立规划模型、强制待办、自动催办或独立最终答复请求，也没有重写 llm/stream 的消息历史。需要时可由模型使用 DSH 原生待办工具。
 
-上下文使用原生 token-meter、tool-result-pruner 和 BasicCompactionEngine。32K 窗口配置 0.75 压缩阈值、4096 余量、保留最近 4096 tokens，以及一次额外压缩和一次溢出恢复；历史原文由 DSH 归档。`src/compaction.ts` 使用原生 summarize 扩展点生成有界摘录，保留用户请求、证据 ID 和近期工具内容，不再额外调用模型写摘要。摘录可能不完整，原始结果可按证据 ID 回读；历史选择、裁剪、压缩有效性检查和恢复仍由 DSH 负责。旧自建上下文流程和 direct/planned 对比流程已删除，`PM_QUERY_MODE` 不再使用。
+上下文使用原生 token-meter、tool-result-pruner 和 BasicCompactionEngine。窗口由 `PM_MODEL_CONTEXT` 配置，压缩阈值为 0.75，预留 4096 tokens，保留最近 4096 tokens，允许一次额外压缩和一次溢出恢复；历史原文由 DSH 归档。`src/compaction.ts` 使用原生 summarize 扩展点生成有界摘录，保留用户请求、证据 ID 和近期工具内容，不再额外调用模型写摘要。摘录可能不完整，原始结果可按证据 ID 回读；历史选择、裁剪、压缩有效性检查和恢复仍由 DSH 负责。旧自建上下文流程和 direct/planned 对比流程已删除，`PM_QUERY_MODE` 不再使用。
 
 推理强度通过 SDK 的 reasoningEffort 设置，默认 `PM_QUERY_REASONING=off`，可显式设为 `low`；查询过程中保持该配置，恢复旧会话时使用原生 `agent.model.select` 应用配置值。默认采样为 temperature=0.7、top_p=0.8、presence_penalty=1.5、top_k=20；`PM_QUERY_TEMPERATURE` 可显式覆盖。DSH 0.2.2-rc.1 的 pi-ai 适配器未暴露底层已有的 samplingParams 配置；`patches/` 中四行兼容补丁仅透传该配置，`npm ci` 的 postinstall 自动应用，没有新增模型循环或 HTTP 网关。升级 DSH 后优先删除上游已支持的补丁。历史压缩不再发起模型请求；查询输出上限为4096。
 
