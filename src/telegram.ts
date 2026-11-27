@@ -653,7 +653,7 @@ export function createTelegram() {
     ], { scope: { type: 'chat', chat_id: userId } });
     await deliver();
     timer = setInterval(() => { void deliver().catch(error => console.error(`Telegram outbox: ${describe(error)}`)); }, 3000);
-    console.error(`Telegram @${bot.botInfo.username} ready; private user ${userId}; session ${session.id}`);
+    console.error('Telegram polling ready.');
     startQueued();
     await bot.start({ allowed_updates: ['message'], drop_pending_updates: false });
   }

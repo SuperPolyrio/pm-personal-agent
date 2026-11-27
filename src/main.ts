@@ -171,7 +171,7 @@ ${outputPolicy}`;
     await session.getWorkingDirectory();
     const saveSession = (id: string) => writeFileSync(savedSession, JSON.stringify({ id }), { mode: 0o600 });
     saveSession(session.id);
-    console.error(`个人 Agent 已启动。会话 ${session.id}，模型 ${model}，使用 DSH 原生会话与工具循环。`);
+    console.error(`个人 Agent 已启动，模型 ${model}。`);
     if (telegram) {
       terminal.close();
       await telegram.run(harness, session, saveSession, sessionId => control({ action: 'cancel', sessionId }), async (name, args = {}) => {
