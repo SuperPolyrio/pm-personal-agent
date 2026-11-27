@@ -1,0 +1,22 @@
+diff --git a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
+index f0836c2..15bc520 100644
+--- a/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
++++ b/node_modules/@deepseek-ai/dsh-llm-pi-ai/lib/index.js
+@@ -707,6 +707,8 @@ function resolveRouteModels(request, validation = "strict") {
+ 			cost: base?.cost ?? NO_COST,
+ 			contextWindow,
+ 			maxTokens,
++			samplingParams: entry.samplingParams ?? base?.samplingParams,
++			samplingParamsByThinkingLevel: entry.samplingParamsByThinkingLevel ?? base?.samplingParamsByThinkingLevel,
+ 			...resolveModelReasoning(provider, entry, base),
+ 			...resolveModelCompat(provider, entry, request.compat, base, api)
+ 		};
+@@ -1034,6 +1036,8 @@ const compatProfile = z.object({
+ const reasoningEfforts = z.dict(z.union([z.string(), z.const(null)]), z.union(THINKING_LEVELS));
+ /** The fields a `models` entry and a `modelOverrides` value share; only the id's home differs. */
+ const modelFields = {
++	samplingParams: z.dict(z.number()),
++	samplingParamsByThinkingLevel: z.dict(z.dict(z.number()), z.union(THINKING_LEVELS)),
+ 	name: z.string(),
+ 	contextWindow: z.number().step(1).min(1),
+ 	maxTokens: z.number().step(1).min(1),

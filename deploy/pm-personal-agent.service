@@ -1,0 +1,18 @@
+[Unit]
+Description=Personal Polymarket Agent Telegram host
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/develop/polymarket/repos/pm-personal-agent
+# Restore the shared resident model after a host reboot.
+ExecStartPre=/usr/local/bin/node --env-file=.env deploy/start-telegram.mjs warmup
+ExecStart=/usr/local/bin/node --env-file=.env deploy/start-telegram.mjs
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=900
+TimeoutStopSec=30
+UMask=0077
+
+[Install]
+WantedBy=default.target

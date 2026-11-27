@@ -1,0 +1,43 @@
+{
+  "name": "pm-personal-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "research": "node --env-file-if-exists=.env dist/main.js research",
+    "telegram": "node --env-file=.env deploy/start-telegram.mjs",
+    "cs2:live": "node --env-file-if-exists=.env tools/cs2-live.mjs",
+    "tools": "node --env-file-if-exists=.env dist/main.js tools",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/dsh": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-agent": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-compaction-basic": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-llm": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-schedule": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-sdk-client": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
+    "@modelcontextprotocol/server-memory": "2.1.0",
+    "cs2parser": "2.8.0",
+    "grammy": "1.46.0",
+    "https-proxy-agent": "9.1.0",
+    "socks-proxy-agent": "10.1.0",
+    "trading-signals": "8.4.1",
+    "ws": "8.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "patch-package": "8.0.1",
+    "typescript": "7.0.2"
+  }
+}
